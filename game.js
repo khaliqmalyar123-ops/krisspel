@@ -56,7 +56,7 @@ const icons = {
 const initialState = {
   water: 60,
   food: 55,
-  energy: 45,
+  energy: 100,
   trust: 50,
   health: 70,
   knowledge: 35,
@@ -73,6 +73,38 @@ const initialState = {
 };
 
 let state = structuredClone(initialState);
+
+// Flip card functionality for meters - using event delegation
+let meterFlipsInitialized = false;
+
+function initMeterFlips() {
+  if (meterFlipsInitialized) return;
+  
+  meterFlipsInitialized = true;
+  
+  // Use event delegation on document level
+  document.addEventListener('click', (e) => {
+    const btn = e.target.closest('.meter-info-btn');
+    
+    if (btn) {
+      e.preventDefault();
+      e.stopPropagation();
+      
+      const meter = btn.closest('.meter');
+      if (meter) {
+        const flipContainer = meter.querySelector('.meter-flip-container');
+        if (flipContainer) {
+          flipContainer.classList.toggle('flipped');
+        }
+      }
+    } else if (!e.target.closest('.meter-flip-container')) {
+      // Close all flipped cards if clicking outside
+      document.querySelectorAll('.meter-flip-container.flipped').forEach(card => {
+        card.classList.remove('flipped');
+      });
+    }
+  });
+}
 
 const scenarios = [
   {
@@ -95,7 +127,7 @@ const scenarios = [
       {
         title: "Ladda alla enheter och powerbanks",
         desc: "Du säkrar kommunikation och ljus om elen går.",
-        effects: { energy: 25, knowledge: 5 },
+        effects: { energy: -25, knowledge: 5 },
         item: { powerbank: 1 },
         feedback: "Du säkrade energi och kommunikation."
       },
@@ -133,7 +165,7 @@ const scenarios = [
       {
         title: "Säg att du inte har tid",
         desc: "Du skyddar dina resurser men tappar lokal tillit.",
-        effects: { trust: -18, health: -4 },
+        effects: { trust: -18, food: -4 },
         feedback: "Själviskt val. Tilliten i huset sjönk."
       }
     ]
@@ -221,7 +253,7 @@ const scenarios = [
       {
         title: "Spara batteri och använd telefonen sparsamt",
         desc: "Du undviker panik och sparar resurser.",
-        effects: { energy: 8, knowledge: 4 },
+        effects: { energy: -8, knowledge: 4 },
         feedback: "Bra energibeslut. Du höll dig lugn."
       },
       {
@@ -470,7 +502,7 @@ const scenarios = [
       {
         title: "Fortsätt uppdatera chatten hela tiden",
         desc: "Det känns aktivt men tömmer batterier och sprider brus.",
-        effects: { energy: -18, knowledge: -4, trust: -4 },
+        effects: { energy: -10, knowledge: -4, trust: -4 },
         feedback: "För mycket digitalt brus försämrade läget."
       }
     ]
@@ -489,6 +521,7 @@ function startGame() {
   state = structuredClone(initialState);
   showScreen("gameScreen");
   renderScenario();
+  initMeterFlips();
 }
 
 function restartGame() {
@@ -668,6 +701,8 @@ function applyItems(item = {}) {
 
 function updateMeters() {
   const values = {
+    health: state.health,
+    knowledge: state.knowledge,
     water: state.water,
     food: state.food,
     energy: state.energy,
@@ -833,3 +868,4 @@ $("modalBackdrop").addEventListener("click", (event) => {
 
   
    
+
