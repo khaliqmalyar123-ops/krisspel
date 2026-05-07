@@ -73,6 +73,7 @@ const initialState = {
 };
 
 let state = structuredClone(initialState);
+let previousMeterValues = { ...state };
 
 // Flip card functionality for meters - using event delegation
 let meterFlipsInitialized = false;
@@ -744,18 +745,19 @@ function updateMeters() {
     const valueEl = $(`${key}Value`);
     const barEl = $(`${key}Bar`);
     const meterEl = barEl.closest('.meter');
-    
+
     valueEl.textContent = value;
     barEl.style.width = `${value}%`;
-    
-    // Lägg till pulse-animation för synlighet
-    if (meterEl) {
+
+    if (meterEl && previousMeterValues[key] !== value) {
       meterEl.classList.add('meter-pulse');
       setTimeout(() => {
         meterEl.classList.remove('meter-pulse');
       }, 600);
     }
   });
+
+  previousMeterValues = { ...values };
 }
 
 function renderInventory() {
@@ -845,10 +847,10 @@ function showDeathScreen(resourceName) {
       <div class="modal" style="border-left: 6px solid var(--red); text-align: center;">
         <h3 style="color: var(--red); font-size: 24px;">☠️ DU ÄR DÖD</h3>
         <p style="font-size: 18px; margin: 16px 0;">
-          Din <strong>${resourceName}</strong> nådde noll.
+          Din <strong>${resourceName}</strong> tog slut. Du dog.
         </p>
         <p style="color: var(--muted); margin-bottom: 20px;">
-          Du kunde inte överleva krisen. Spelet är över.
+          Spelet är över för dig eftersom en viktig resurs nådde noll.
         </p>
         <button class="btn btn-primary btn-wide" onclick="goToResult()">Till resultat</button>
       </div>
