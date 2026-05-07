@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="sv">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Grannhjälpen: 72 timmar</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+  <main class="phone">
+
+    <!-- STARTSCREEN -->
+    <section id="startScreen" class="screen active">
+      <div class="hero">
+        <div class="logo-row">
+          <div class="logo">
+            <div class="logo-mark">
+              <svg class="icon" viewBox="0 0 24 24">
+                <path d="M3 11l9-8 9 8"></path>
+                <path d="M5 10v10h14V10"></path>
+                <path d="M9 20v-6h6v6"></path>
+              </svg>
+            </div>
+            <span>Grannhjälpen</span>
+          </div>
+
+          <div class="pill">Interaktivt spel</div>
+        </div>
+
+        <h1>72 timmar i kris</h1>
+        <p>
+          Bygg upp hushållets beredskap, samarbeta med grannar och fatta svåra beslut
+          när el, vatten och information sviker.
+        </p>
+      </div>
+
+      <div class="intro-card">
+        <strong>Spelets mål</strong>
+        <p>
+          Klara tre dygn utan att vatten, mat, energi, hälsa eller grannskapets tillit
+          faller för lågt. Varje val påverkar resurserna.
+        </p>
+
+        <div class="intro-stats">
+          <div class="intro-stat">
+            <strong>3</strong>
+            <span>dygn</span>
+          </div>
+
+          <div class="intro-stat">
+            <strong>12</strong>
+            <span>beslut</span>
+          </div>
+
+          <div class="intro-stat">
+            <strong>100</strong>
+            <span>poäng</span>
+          </div>
+        </div>
+
+        <button id="startBtn" class="btn btn-primary btn-wide">Starta spel</button>
+        <button id="howBtn" class="btn btn-ghost btn-wide">Hur spelar man?</button>
+      </div>
+
+      <div class="concept-card">
+        <h3>Spelkoncept</h3>
+        <p>
+          Du spelar som boende i ett flerfamiljshus under ett längre avbrott.
+          Målet är inte bara att skydda dig själv, utan att skapa robusthet tillsammans
+          med andra.
+        </p>
+      </div>
+    </section>
+
+    <!-- GAME SCREEN -->
+    <section id="gameScreen" class="screen">
+      <div class="topbar">
+        <div class="toprow">
+          <div>
+            <div id="dayTitle" class="day-title">Dag 1 · 08:00</div>
+            <div id="phaseTitle" class="phase-title">Förberedelse</div>
+          </div>
+
+          <div id="roundBadge" class="round-badge">Runda 1/12</div>
+        </div>
+
+        <div class="meters">
+          <div class="meter">
+            <div class="meter-label">
+              <span>Vatten</span>
+              <span id="waterValue">60</span>
+            </div>
+            <div class="bar">
+              <div id="waterBar" class="fill water"></div>
+            </div>
+          </div>
+
+          <div class="meter">
+            <div class="meter-label">
+              <span>Mat</span>
+              <span id="foodValue">55</span>
+            </div>
+            <div class="bar">
+              <div id="foodBar" class="fill food"></div>
+            </div>
+          </div>
+
+          <div class="meter">
+            <div class="meter-label">
+              <span>Energi</span>
+              <span id="energyValue">45</span>
+            </div>
+            <div class="bar">
+              <div id="energyBar" class="fill energy"></div>
+            </div>
+          </div>
+
+          <div class="meter">
+            <div class="meter-label">
+              <span>Tillit</span>
+              <span id="trustValue">50</span>
+            </div>
+            <div class="bar">
+              <div id="trustBar" class="fill trust"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="game-body">
+        <div class="mission-card">
+          <div class="mission-top">
+            <div>
+              <h2 id="eventTitle">Scenario</h2>
+              <p id="eventText">Text</p>
+              <div id="eventTags" class="tag-row"></div>
+            </div>
+
+            <div id="eventIcon" class="event-icon"></div>
+          </div>
+
+          <div id="choices" class="choices"></div>
+        </div>
+
+        <div class="inventory-card">
+          <h3>Ditt krislager</h3>
+          <div id="inventoryItems" class="items"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- RESULT SCREEN -->
+    <section id="resultScreen" class="screen">
+      <div class="result-hero">
+        <div class="logo-row">
+          <div class="logo">
+            <div class="logo-mark">
+              <svg class="icon" viewBox="0 0 24 24">
+                <path d="M3 11l9-8 9 8"></path>
+                <path d="M5 10v10h14V10"></path>
+                <path d="M9 20v-6h6v6"></path>
+              </svg>
+            </div>
+            <span>Grannhjälpen</span>
+          </div>
+
+          <div class="pill">Resultat</div>
+        </div>
+
+        <h1 id="resultTitle">Krisen är över</h1>
+        <p id="resultSubtitle">Du tog dig igenom 72 timmar.</p>
+      </div>
+
+      <div class="result-body">
+        <div class="score-circle">
+          <strong id="scoreValue">0</strong>
+        </div>
+
+        <div class="result-card">
+          <h3>Bedömning</h3>
+          <p id="scoreText"></p>
+        </div>
+
+        <div class="result-card">
+          <h3>Vad spelet lär ut</h3>
+          <ul id="learningList"></ul>
+        </div>
+
+        <div class="result-card">
+          <h3>Händelselogg</h3>
+          <div id="resultLog" class="mini-log"></div>
+        </div>
+
+        <button id="restartBtn" class="btn btn-primary btn-wide">Spela igen</button>
+        <button id="homeBtn" class="btn btn-ghost btn-wide">Till startsidan</button>
+      </div>
+    </section>
+
+    <!-- MODAL -->
+    <div id="modalBackdrop" class="modal-backdrop">
+      <div class="modal">
+        <h3>Så spelar du</h3>
+        <p>
+          Du får 12 krisscenarier. Varje val påverkar vatten, mat, energi,
+          hälsa, kunskap och tillit. Bra spel handlar om balans mellan egen
+          beredskap och grannsamverkan.
+        </p>
+
+        <button id="closeModalBtn" class="btn btn-navy btn-wide">Jag förstår</button>
+      </div>
+    </div>
+
+    <!-- TOAST -->
+    <div id="toast" class="toast"></div>
+  </main>
+
+  <script src="game.js"></script>
+</body>
+</html>
