@@ -74,6 +74,97 @@
       </div>
     </section>
 
+    <!-- SETUP SCREEN -->
+    <section id="setupScreen" class="screen">
+      <div class="setup-hero">
+        <h1>Välj dina materialer</h1>
+        <p>Du har några minuter före stormen. Vilka krislager startar du med?</p>
+      </div>
+
+      <div class="setup-body">
+        <div class="setup-card">
+          <h3>Ditt krislager</h3>
+          <p class="setup-description">Välja minst ett material för att börja</p>
+
+          <div class="setup-items">
+            <label class="setup-item">
+              <input type="checkbox" id="setup-waterCans" value="waterCans" />
+              <div class="setup-item-content">
+                <strong>Vattendunkar</strong>
+                <span>Extra vatten för hushål</span>
+              </div>
+              <svg class="icon" viewBox="0 0 24 24">
+                <path d="M12 2C8.2 6.8 6 10.2 6 14a6 6 0 0 0 12 0c0-3.8-2.2-7.2-6-12z"></path>
+              </svg>
+            </label>
+
+            <label class="setup-item">
+              <input type="checkbox" id="setup-foodBox" value="foodBox" />
+              <div class="setup-item-content">
+                <strong>Matlåda</strong>
+                <span>Torrvaror som klarar avbrott</span>
+              </div>
+              <svg class="icon" viewBox="0 0 24 24">
+                <path d="M3 2v6h6M3 8L15 20M9 2h12v12H9z"></path>
+              </svg>
+            </label>
+
+            <label class="setup-item">
+              <input type="checkbox" id="setup-powerbank" value="powerbank" />
+              <div class="setup-item-content">
+                <strong>Powerbank</strong>
+                <span>Reservenergi för mobil</span>
+              </div>
+              <svg class="icon" viewBox="0 0 24 24">
+                <path d="M13 2 3 14h8l-1 8 10-12h-8l1-8z"></path>
+              </svg>
+            </label>
+
+            <label class="setup-item">
+              <input type="checkbox" id="setup-firstAid" value="firstAid" />
+              <div class="setup-item-content">
+                <strong>Första hjälpen</strong>
+                <span>Material för mindre skador</span>
+              </div>
+              <svg class="icon" viewBox="0 0 24 24">
+                <path d="M19 14c1.5-1.5 3-3.5 3-6a5 5 0 0 0-9-3 5 5 0 0 0-9 3c0 2.5 1.5 4.5 3 6l5 5 7-5z"></path>
+              </svg>
+            </label>
+
+            <label class="setup-item">
+              <input type="checkbox" id="setup-radio" value="radio" />
+              <div class="setup-item-content">
+                <strong>Batteriradio</strong>
+                <span>Backup för krisinformation</span>
+              </div>
+              <svg class="icon" viewBox="0 0 24 24">
+                <path d="M4 11h16v9H4z"></path>
+                <path d="M8 16h.01"></path>
+                <path d="M12 16h4"></path>
+                <path d="M8 11 18 4"></path>
+              </svg>
+            </label>
+
+            <label class="setup-item">
+              <input type="checkbox" id="setup-neighborList" value="neighborList" />
+              <div class="setup-item-content">
+                <strong>Kontaktlista</strong>
+                <span>Strukturerad grannsamverkan</span>
+              </div>
+              <svg class="icon" viewBox="0 0 24 24">
+                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+                <circle cx="9" cy="7" r="4"></circle>
+                <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+              </svg>
+            </label>
+          </div>
+
+          <button id="startGameBtn" class="btn btn-primary btn-wide" style="margin-top: 20px;">Börja spelet</button>
+        </div>
+      </div>
+    </section>
+
     <!-- GAME SCREEN -->
     <section id="gameScreen" class="screen">
       <div class="topbar">

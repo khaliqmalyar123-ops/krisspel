@@ -54,12 +54,12 @@ const icons = {
 };
 
 const initialState = {
-  water: 60,
-  food: 55,
-  energy: 100,
-  trust: 50,
-  health: 70,
-  knowledge: 35,
+  water: 40,
+  food: 35,
+  energy: 50,
+  trust: 45,
+  health: 60,
+  knowledge: 30,
   round: 0,
   log: [],
   items: {
@@ -518,14 +518,38 @@ function showScreen(id) {
 }
 
 function startGame() {
+  showScreen("setupScreen");
+}
+
+function startGameFromSetup() {
   state = structuredClone(initialState);
+  
+  // Läs vilka material som är valda
+  const selectedMaterials = [
+    "waterCans",
+    "foodBox",
+    "powerbank",
+    "firstAid",
+    "radio",
+    "neighborList"
+  ];
+
+  selectedMaterials.forEach((material) => {
+    const checkbox = $("setup-" + material);
+    if (checkbox && checkbox.checked) {
+      state.items[material] = 1;
+    } else {
+      state.items[material] = 0;
+    }
+  });
+
   showScreen("gameScreen");
   renderScenario();
   initMeterFlips();
 }
 
 function restartGame() {
-  startGame();
+  showScreen("setupScreen");
 }
 
 function openHowTo() {
@@ -619,7 +643,7 @@ function effectSummary(choice) {
   if (choice.effects) {
     Object.entries(choice.effects).forEach(([key, value]) => {
       if (labels[key]) {
-        parts.push(`${value > 0 ? "+" : ""}${value} ${labels[key]}`);
+        parts.push(labels[key]);
       }
     });
   }
@@ -660,6 +684,9 @@ function chooseOption(index) {
   updateMeters();
 
   setTimeout(() => {
+    if (checkLowResources()) {
+      return;
+    }
     if (state.round >= scenarios.length || isGameOver()) {
       finishGame();
     } else {
@@ -691,6 +718,10 @@ function applyEffects(effects = {}) {
   if (state.energy < 15) {
     state.knowledge = clamp(state.knowledge - 3);
   }
+
+  if (state.knowledge < 20) {
+    state.trust = clamp(state.trust - 2);
+  }
 }
 
 function applyItems(item = {}) {
@@ -710,8 +741,20 @@ function updateMeters() {
   };
 
   Object.entries(values).forEach(([key, value]) => {
-    $(`${key}Value`).textContent = value;
-    $(`${key}Bar`).style.width = `${value}%`;
+    const valueEl = $(`${key}Value`);
+    const barEl = $(`${key}Bar`);
+    const meterEl = barEl.closest('.meter');
+    
+    valueEl.textContent = value;
+    barEl.style.width = `${value}%`;
+    
+    // Lägg till pulse-animation för synlighet
+    if (meterEl) {
+      meterEl.classList.add('meter-pulse');
+      setTimeout(() => {
+        meterEl.classList.remove('meter-pulse');
+      }, 600);
+    }
   });
 }
 
@@ -744,9 +787,83 @@ function isGameOver() {
     state.water <= 0 ||
     state.food <= 0 ||
     state.health <= 0 ||
-    state.trust <= 0
+    state.trust <= 0 ||
+    state.energy <= 0 ||
+    state.knowledge <= 0
   );
 }
+
+function checkLowResources() {
+  const thresholds = {
+    water: { value: state.water, label: "Vatten", icon: "water" },
+    food: { value: state.food, label: "Mat", icon: "food" },
+    health: { value: state.health, label: "Hälsa", icon: "health" },
+    energy: { value: state.energy, label: "Energi", icon: "energy" },
+    trust: { value: state.trust, label: "Tillit", icon: "trust" },
+    knowledge: { value: state.knowledge, label: "Kunskap", icon: "knowledge" }
+  };
+
+  for (const [key, resource] of Object.entries(thresholds)) {
+    if (resource.value <= 0) {
+      showDeathScreen(resource.label);
+      return true;
+    }
+    if (resource.value <= 20 && resource.value > 0) {
+      showWarningModal(resource.label, resource.value);
+      return false;
+    }
+  }
+  return false;
+}
+
+function showWarningModal(resourceName, value) {
+  const warningHtml = `
+    <div id="warningBackdrop" class="modal-backdrop show" style="z-index: 100;">
+      <div class="modal" style="border-left: 6px solid var(--red);">
+        <h3 style="color: var(--red);">⚠️ KRITISK VARNING</h3>
+        <p>
+          Du har bara <strong>${value} poäng</strong> kvar på <strong>${resourceName}</strong>.
+          Om detta når noll är spelet över!
+        </p>
+        <p style="font-size: 13px; color: var(--muted);">Du måste agera snabbt för att öka denna resurs.</p>
+        <button class="btn btn-primary btn-wide" onclick="closeWarningModal()">Jag förstår</button>
+      </div>
+    </div>
+  `;
+  
+  document.body.insertAdjacentHTML('beforeend', warningHtml);
+}
+
+function closeWarningModal() {
+  const backdrop = document.getElementById('warningBackdrop');
+  if (backdrop) backdrop.remove();
+}
+
+function showDeathScreen(resourceName) {
+  const deathHtml = `
+    <div id="deathBackdrop" class="modal-backdrop show" style="z-index: 100;">
+      <div class="modal" style="border-left: 6px solid var(--red); text-align: center;">
+        <h3 style="color: var(--red); font-size: 24px;">☠️ DU ÄR DÖD</h3>
+        <p style="font-size: 18px; margin: 16px 0;">
+          Din <strong>${resourceName}</strong> nådde noll.
+        </p>
+        <p style="color: var(--muted); margin-bottom: 20px;">
+          Du kunde inte överleva krisen. Spelet är över.
+        </p>
+        <button class="btn btn-primary btn-wide" onclick="goToResult()">Till resultat</button>
+      </div>
+    </div>
+  `;
+  
+  document.body.insertAdjacentHTML('beforeend', deathHtml);
+}
+
+function goToResult() {
+  const backdrop = document.getElementById('deathBackdrop');
+  if (backdrop) backdrop.remove();
+  finishGame();
+}
+
 
 function calculateScore() {
   const average = Math.round(
@@ -758,14 +875,84 @@ function calculateScore() {
       state.knowledge) / 6
   );
 
-  const itemBonus = Object.values(state.items).reduce((sum, value) => sum + value, 0) * 2;
-  const survivalBonus = state.round >= scenarios.length ? 10 : 0;
+  const itemBonus = Object.values(state.items).reduce((sum, value) => sum + value, 0) * 5;
+  const survivalBonus = state.round >= scenarios.length ? 25 : 0;
+  const trustBonus = state.trust >= 75 ? 20 : 0;
+  const balanceBonus = Math.min(state.water, state.food, state.health) >= 50 ? 15 : 0;
 
-  return clamp(average + itemBonus + survivalBonus);
+  return clamp(average + itemBonus + survivalBonus + trustBonus + balanceBonus);
+}
+
+function getPlayerProfile() {
+  let personality = "";
+  let strengths = [];
+  let weaknesses = [];
+  let focusAreas = [];
+
+  if (state.trust >= 70) {
+    strengths.push("Utmärkt grannsamverkan");
+    personality = "Du är en samarbetsbar person som bygger gemenskapens styrka.";
+  } else if (state.trust < 30) {
+    weaknesses.push("Svag grannsamverkan");
+    personality = "Du fokuserade på att skydda dig själv framför gemensam robusthet.";
+  }
+
+  if (state.health >= 70) {
+    strengths.push("Stark hälsa och säkerhet");
+  } else if (state.health < 40) {
+    weaknesses.push("Svag hälsomarginal");
+  }
+
+  if (state.knowledge >= 70) {
+    strengths.push("Utmärkt informationskontroll");
+    focusAreas.push("Du prioriterade verifierad information");
+  } else if (state.knowledge < 30) {
+    weaknesses.push("Dålig källkritik");
+  }
+
+  if (state.water >= 60) {
+    strengths.push("Väl säkrad vattenförsörjning");
+    focusAreas.push("Du planerade vattenreserven tidigt");
+  }
+
+  if (state.food >= 60) {
+    strengths.push("Stabil matreserv");
+  }
+
+  if (state.energy >= 60) {
+    strengths.push("Bra energiberedskap");
+  }
+
+  const hasItems = Object.values(state.items).reduce((sum, v) => sum + v, 0);
+  const itemNames = [];
+  if (state.items.waterCans > 0) itemNames.push("vattendunkar");
+  if (state.items.foodBox > 0) itemNames.push("matlåda");
+  if (state.items.powerbank > 0) itemNames.push("powerbank");
+  if (state.items.radio > 0) itemNames.push("batteriradio");
+  if (state.items.firstAid > 0) itemNames.push("första hjälpen");
+  if (state.items.neighborList > 0) itemNames.push("kontaktlista");
+
+  if (!personality) {
+    if (state.round >= 12) {
+      personality = "Du är en balanserad beslutsfattare som klarade alla utmaningar.";
+    } else {
+      personality = "Du är en försiktig planeringsperson som tog snabba beslut.";
+    }
+  }
+
+  return {
+    personality,
+    strengths: strengths.length > 0 ? strengths : ["Grundläggande överlevnad"],
+    weaknesses: weaknesses.length > 0 ? weaknesses : [],
+    focusAreas: focusAreas.length > 0 ? focusAreas : ["Du fokuserade på överlevnad"],
+    items: itemNames.length > 0 ? itemNames : [],
+    survived: !isGameOver()
+  };
 }
 
 function finishGame() {
   const score = calculateScore();
+  const profile = getPlayerProfile();
 
   showScreen("resultScreen");
 
@@ -776,27 +963,84 @@ function finishGame() {
   let text = "";
 
   if (isGameOver()) {
-    title = "Krisen blev för svår";
-    subtitle = "En kritisk resurs föll till noll.";
+    title = "💀 Du överlevde inte krisen";
+    subtitle = "En kritisk resurs nådde noll.";
     text =
       "Du fattade några bra beslut, men en central del av beredskapen blev för svag. Testa igen och balansera hushållets behov med grannskapets samverkan.";
-  } else if (score >= 85) {
+  } else if (score >= 90) {
     text =
-      "Utmärkt. Du kombinerade egen beredskap, källkritik och lokal samordning. Ditt hushåll klarade sig, och du stärkte även grannskapets robusthet.";
-  } else if (score >= 65) {
+      "🏆 MERITERAD! Du är en krisherald. Du kombinerade perfekt egen beredskap, källkritik och lokal samordning. Ditt hushåll och grannskapet är säkra.";
+  } else if (score >= 75) {
     text =
-      "Bra. Du klarade krisen, men vissa resurser blev pressade. Nästa gång kan du förbättra balansen mellan vatten, energi och tillit.";
+      "✨ Utmärkt. Du kombinerade egen beredskap och lokal samordning väl. Ditt hushåll klarade sig, och du stärkte grannskapets robusthet.";
+  } else if (score >= 60) {
+    text =
+      "👍 Bra. Du klarade krisen, men vissa resurser blev pressade. Nästa gång kan du förbättra balansen mellan vatten, energi och tillit.";
+  } else if (score >= 40) {
+    text =
+      "⚠️ Du överlevde, men med låg marginal. Spelet visar att krisberedskap kräver både resurser, planering och samarbete.";
   } else {
     text =
-      "Du överlevde, men med låg marginal. Spelet visar att krisberedskap kräver både resurser, planering och samarbete.";
+      "😰 Du överlevde knappt. Du behöver fundera på bättre planering och balans mellan dina resurser.";
   }
 
   $("resultTitle").textContent = title;
   $("resultSubtitle").textContent = subtitle;
   $("scoreText").textContent = text;
 
+  renderProfile(profile);
   renderLessons();
   renderLog();
+}
+
+function renderProfile(profile) {
+  let profileHtml = `
+    <div class="result-card">
+      <h3>Din krishandling profil</h3>
+      <p style="font-style: italic; color: var(--navy); margin-bottom: 12px;">
+        "${profile.personality}"
+      </p>
+      
+      ${profile.strengths.length > 0 ? `
+        <div style="margin-bottom: 14px;">
+          <strong style="color: var(--green);">Din styrka:</strong>
+          <ul style="margin: 6px 0; padding-left: 20px;">
+            ${profile.strengths.map(s => `<li>${s}</li>`).join("")}
+          </ul>
+        </div>
+      ` : ""}
+      
+      ${profile.weaknesses.length > 0 ? `
+        <div style="margin-bottom: 14px;">
+          <strong style="color: var(--red);">Att förbättra:</strong>
+          <ul style="margin: 6px 0; padding-left: 20px;">
+            ${profile.weaknesses.map(w => `<li>${w}</li>`).join("")}
+          </ul>
+        </div>
+      ` : ""}
+      
+      ${profile.focusAreas.length > 0 ? `
+        <div style="margin-bottom: 14px;">
+          <strong>Du fokuserade på:</strong>
+          <ul style="margin: 6px 0; padding-left: 20px;">
+            ${profile.focusAreas.map(f => `<li>${f}</li>`).join("")}
+          </ul>
+        </div>
+      ` : ""}
+      
+      ${profile.items.length > 0 ? `
+        <div>
+          <strong>Resurser du hade kvar:</strong>
+          <p style="color: var(--muted); margin: 6px 0;">${profile.items.join(", ")}</p>
+        </div>
+      ` : `<div><strong>Resurser:</strong> <p style="color: var(--muted);">Du hade inga resurser kvar</p></div>`}
+    </div>
+  `;
+  
+  const resultCards = document.querySelectorAll('.result-card');
+  if (resultCards.length > 0) {
+    resultCards[0].insertAdjacentHTML('beforebegin', profileHtml);
+  }
 }
 
 function renderLessons() {
@@ -852,7 +1096,7 @@ function renderLog() {
 
 $("startBtn").addEventListener("click", startGame);
 $("restartBtn").addEventListener("click", restartGame);
-
+$("startGameBtn").addEventListener("click", startGameFromSetup);
 $("homeBtn").addEventListener("click", () => {
   showScreen("startScreen");
 });
