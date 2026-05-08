@@ -389,6 +389,81 @@ button {
   gap: 12px;
 }
 
+.timer-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.timer-circle {
+  position: relative;
+  width: 70px;
+  height: 70px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.timer-svg {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.timer-bg {
+  fill: none;
+  stroke: var(--line);
+  stroke-width: 3;
+}
+
+.timer-progress {
+  fill: none;
+  stroke: var(--blue);
+  stroke-width: 3;
+  stroke-dasharray: 282.7;
+  stroke-dashoffset: 0;
+  transition: stroke-dashoffset 0.1s linear;
+  stroke-linecap: round;
+}
+
+.timer-progress.warning {
+  stroke: var(--amber);
+}
+
+.timer-progress.danger {
+  stroke: var(--red);
+}
+
+.timer-text {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 950;
+  color: var(--navy);
+  letter-spacing: -0.04em;
+}
+
+.timer-text.warning {
+  color: var(--amber);
+}
+
+.timer-text.danger {
+  color: var(--red);
+  animation: timerPulse 0.5s ease infinite;
+}
+
+@keyframes timerPulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
 .top-mini-meters {
   display: grid;
   grid-template-columns: repeat(2, minmax(140px, 1fr));

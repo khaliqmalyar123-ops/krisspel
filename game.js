@@ -54,12 +54,12 @@ const icons = {
 };
 
 const initialState = {
-  water: 40,
-  food: 35,
-  energy: 50,
-  trust: 45,
-  health: 60,
-  knowledge: 30,
+  water: 30,
+  food: 25,
+  energy: 35,
+  trust: 35,
+  health: 50,
+  knowledge: 20,
   round: 0,
   log: [],
   items: {
@@ -74,6 +74,9 @@ const initialState = {
 
 let state = structuredClone(initialState);
 let previousMeterValues = { ...state };
+let timerInterval = null;
+let timerSeconds = 90;
+const TIMER_DURATION = 90;
 
 // Flip card functionality for meters - using event delegation
 let meterFlipsInitialized = false;
@@ -121,21 +124,21 @@ const scenarios = [
       {
         title: "Fyll dunkar och flaskor med vatten",
         desc: "Vatten är ofta svårare att ersätta än man tror.",
-        effects: { water: 25, energy: -2, knowledge: 5 },
+        effects: { water: 18, energy: -4, knowledge: 3 },
         item: { waterCans: 1 },
         feedback: "Bra grundbeslut. Vattenreserven ökade."
       },
       {
         title: "Ladda alla enheter och powerbanks",
         desc: "Du säkrar kommunikation och ljus om elen går.",
-        effects: { energy: -25, knowledge: 5 },
+        effects: { energy: -28, knowledge: 4 },
         item: { powerbank: 1 },
         feedback: "Du säkrade energi och kommunikation."
       },
       {
         title: "Vänta och se om det verkligen blir kris",
         desc: "Du sparar tid nu, men riskerar att hamna efter.",
-        effects: { water: -8, energy: -8, trust: -2 },
+        effects: { water: -12, energy: -12, trust: -5, health: -4 },
         feedback: "Passivitet gjorde dig mer sårbar."
       }
     ]
@@ -153,20 +156,20 @@ const scenarios = [
       {
         title: "Hjälp grannen och skapa en kontaktlista",
         desc: "Ni byter nummer och bestämmer vem som kollar läget senare.",
-        effects: { trust: 25, energy: -5, knowledge: 10 },
+        effects: { trust: 18, energy: -6, knowledge: 8 },
         item: { neighborList: 1 },
         feedback: "Grannskapets tillit ökade kraftigt."
       },
       {
         title: "Ge kort råd men prioritera ditt eget hem",
         desc: "Du hjälper lite utan att lägga mycket tid.",
-        effects: { trust: 8, knowledge: 4 },
+        effects: { trust: 5, knowledge: 3 },
         feedback: "Du hjälpte lite, men byggde inte stark samverkan."
       },
       {
         title: "Säg att du inte har tid",
         desc: "Du skyddar dina resurser men tappar lokal tillit.",
-        effects: { trust: -18, food: -4 },
+        effects: { trust: -22, food: -6, health: -5 },
         feedback: "Själviskt val. Tilliten i huset sjönk."
       }
     ]
@@ -184,20 +187,20 @@ const scenarios = [
       {
         title: "Förbered radion med batterier",
         desc: "Ger robust informationskanal senare.",
-        effects: { energy: -4, knowledge: 12 },
+        effects: { energy: -5, knowledge: 10 },
         item: { radio: 1 },
         feedback: "Radion är redo som backup."
       },
       {
         title: "Lämna den, mobilen räcker nog",
         desc: "Du sparar tid men saknar backup.",
-        effects: { knowledge: -4 },
+        effects: { knowledge: -6 },
         feedback: "Mobilen är inte alltid tillräcklig i kris."
       },
       {
         title: "Ge radion till grannskapet",
         desc: "Du bygger gemensam robusthet.",
-        effects: { trust: 14, knowledge: 10 },
+        effects: { trust: 16, knowledge: 12, energy: -3 },
         item: { radio: 1 },
         feedback: "Radion blev en gemensam resurs."
       }
@@ -216,20 +219,20 @@ const scenarios = [
       {
         title: "Bygg ett enkelt första hjälpen-kit",
         desc: "Du säkrar små skador innan de blir större problem.",
-        effects: { health: 18, knowledge: 6 },
+        effects: { health: 12, knowledge: 5 },
         item: { firstAid: 1 },
         feedback: "Första hjälpen-kitet höjde säkerheten."
       },
       {
         title: "Prioritera mat och vatten istället",
         desc: "Rimligt, men hälsomarginalen blir lägre.",
-        effects: { water: 4, food: 4, health: -4 },
+        effects: { water: 3, food: 3, health: -6 },
         feedback: "Du stärkte basresurser men saknar vårdmarginal."
       },
       {
         title: "Fråga grannar om någon har sjukvårdskunskap",
         desc: "Kunskap kan vara lika viktig som prylar.",
-        effects: { trust: 12, knowledge: 12 },
+        effects: { trust: 10, knowledge: 10, energy: -3 },
         feedback: "Du kartlade lokal kompetens."
       }
     ]
@@ -248,19 +251,19 @@ const scenarios = [
         title: "Starta Grannhjälpen-läge och dela tydlig status",
         desc: "Du samlar läget: vilka är drabbade och vem behöver hjälp?",
         requires: { neighborList: 1 },
-        effects: { trust: 20, knowledge: 10, energy: -6 },
+        effects: { trust: 16, knowledge: 8, energy: -7 },
         feedback: "Kontaktlistan gjorde stor skillnad. Informationen blev strukturerad."
       },
       {
         title: "Spara batteri och använd telefonen sparsamt",
         desc: "Du undviker panik och sparar resurser.",
-        effects: { energy: -8, knowledge: 4 },
+        effects: { energy: -10, knowledge: 3 },
         feedback: "Bra energibeslut. Du höll dig lugn."
       },
       {
         title: "Skicka många meddelanden till alla",
         desc: "Du försöker hjälpa men skapar brus och tömmer batteri.",
-        effects: { energy: -18, trust: -6, knowledge: -4 },
+        effects: { energy: -22, trust: -10, knowledge: -6, health: -4 },
         feedback: "Information utan struktur skapade mer stress."
       }
     ]
@@ -278,20 +281,20 @@ const scenarios = [
       {
         title: "Ransonera vatten och informera hushållet",
         desc: "Du sätter tydliga regler för dryck, mat och hygien.",
-        effects: { water: 8, health: 6, knowledge: 8 },
+        effects: { water: 5, health: 4, knowledge: 6 },
         feedback: "Ransonering gav kontroll och minskade risk."
       },
       {
         title: "Dela en dunk med grannen som saknar vatten",
         desc: "Du tappar lite vatten men bygger tillit.",
         requires: { waterCans: 1 },
-        effects: { water: -10, trust: 22, health: 3 },
+        effects: { water: -14, trust: 18, health: 2 },
         feedback: "Du offrade lite men stärkte grannskapets robusthet."
       },
       {
         title: "Använd vatten som vanligt tills det tar slut",
         desc: "Du undviker obehag nu men förlorar snabbt marginal.",
-        effects: { water: -25, health: -8 },
+        effects: { water: -30, health: -10, trust: -5 },
         feedback: "Vattenreserven minskade farligt snabbt."
       }
     ]
@@ -309,19 +312,19 @@ const scenarios = [
       {
         title: "Samla familjen i ett rum och spara värme",
         desc: "Du minskar energiförlust och håller lugnet.",
-        effects: { health: 10, energy: 4, food: -3 },
+        effects: { health: 8, energy: 2, food: -4 },
         feedback: "Smart krisstrategi. Hälsa och energi stabiliserades."
       },
       {
         title: "Använd powerbank och lampor hela kvällen",
         desc: "Det känns tryggt men kostar mycket energi.",
-        effects: { energy: -22, health: 4 },
+        effects: { energy: -26, health: 3 },
         feedback: "Det blev tryggare kortsiktigt men energin föll."
       },
       {
         title: "Gå runt i huset och kontrollera läget",
         desc: "Du hjälper andra men blir trött och kall.",
-        effects: { trust: 14, health: -8, energy: -4 },
+        effects: { trust: 12, health: -10, energy: -6 },
         feedback: "Omsorgsfullt, men kroppen tog stryk."
       }
     ]
@@ -339,19 +342,19 @@ const scenarios = [
       {
         title: "Vänta på verifierad information och markera ryktet som obekräftat",
         desc: "Du bromsar panik och uppmuntrar källkontroll.",
-        effects: { trust: 16, knowledge: 18 },
+        effects: { trust: 14, knowledge: 15 },
         feedback: "Starkt beslut. Källkritik höjde tilliten."
       },
       {
         title: "Sprid varningen vidare för säkerhets skull",
         desc: "Det kan vara rätt, men utan källa kan panik öka.",
-        effects: { trust: -10, knowledge: -8, health: 2 },
+        effects: { trust: -14, knowledge: -12, health: -3 },
         feedback: "Bra intention, men obekräftad info skapade oro."
       },
       {
         title: "Ignorera allt och gör ingenting",
         desc: "Du sparar energi men hjälper inte andra att förstå läget.",
-        effects: { trust: -8, knowledge: -5 },
+        effects: { trust: -10, knowledge: -8, health: -2 },
         feedback: "Passivitet gjorde läget otydligare."
       }
     ]
@@ -369,19 +372,19 @@ const scenarios = [
       {
         title: "Ät kylvaror först och spara torrvaror",
         desc: "Du minskar matsvinn och sparar krislager.",
-        effects: { food: 10, health: 4, knowledge: 6 },
+        effects: { food: 7, health: 3, knowledge: 5 },
         feedback: "Bra matstrategi. Du maximerade resurserna."
       },
       {
         title: "Dela mat med två grannar och laga gemensamt",
         desc: "Ni använder resurser effektivt och bygger relationer.",
-        effects: { food: -4, trust: 20, health: 6 },
+        effects: { food: -8, trust: 16, health: 4 },
         feedback: "Gemensam matlagning stärkte både tillit och hälsa."
       },
       {
         title: "Spara allt och ät så lite som möjligt",
         desc: "Du sparar mat men tappar energi och ork.",
-        effects: { food: 8, health: -14 },
+        effects: { food: 6, health: -18, energy: -6 },
         feedback: "För hård ransonering påverkade hälsan."
       }
     ]
@@ -400,19 +403,19 @@ const scenarios = [
         title: "Organisera två personer som hjälper Maria",
         desc: "Du använder grannskapet istället för att lösa allt själv.",
         requires: { neighborList: 1 },
-        effects: { trust: 25, health: 12, knowledge: 8 },
+        effects: { trust: 18, health: 10, knowledge: 6 },
         feedback: "Decentraliserad hjälp fungerade mycket bra."
       },
       {
         title: "Försök hjälpa själv direkt",
         desc: "Snabbt och omtänksamt, men det belastar dig.",
-        effects: { trust: 10, health: -8, energy: -5 },
+        effects: { trust: 8, health: -10, energy: -7 },
         feedback: "Du hjälpte, men tog för mycket ansvar själv."
       },
       {
         title: "Säg att hon bör ringa 112 direkt",
         desc: "Rätt vid livsfara, men situationen kanske behövde lokal hjälp först.",
-        effects: { trust: -5, knowledge: 5 },
+        effects: { trust: -8, knowledge: 3, health: -4 },
         feedback: "Externa resurser är viktiga, men lokal samordning kan avlasta."
       }
     ]
@@ -430,19 +433,19 @@ const scenarios = [
       {
         title: "Ta bort ljusen och sätt upp säker instruktion",
         desc: "Du minskar brandrisken och förklarar varför.",
-        effects: { health: 15, trust: 8, knowledge: 10 },
+        effects: { health: 12, trust: 6, knowledge: 8 },
         feedback: "Du agerade säkert och pedagogiskt."
       },
       {
         title: "Låt dem stå kvar eftersom folk behöver ljus",
         desc: "Kortvarig nytta men stor risk.",
-        effects: { health: -20, trust: -4 },
+        effects: { health: -26, trust: -8, knowledge: -4 },
         feedback: "Brandrisk är farligare än mörker i trapphus."
       },
       {
         title: "Ersätt med ficklampor från grannar",
         desc: "Säkrare lösning, särskilt om tilliten är hög.",
-        effects: { health: 12, trust: 14, energy: -4 },
+        effects: { health: 10, trust: 12, energy: -5 },
         feedback: "Bra kompromiss. Trygghet utan ökad brandrisk."
       }
     ]
@@ -460,19 +463,19 @@ const scenarios = [
       {
         title: "Skapa ett gemensamt resursbord i entrén",
         desc: "Alla kan bidra och ta det mest nödvändiga.",
-        effects: { trust: 25, water: -8, food: -6, knowledge: 8 },
+        effects: { trust: 20, water: -12, food: -10, knowledge: 7 },
         feedback: "Kollektiv resursdelning ökade robustheten."
       },
       {
         title: "Behåll dina resurser för säkerhets skull",
         desc: "Du skyddar hushållet men riskerar social friktion.",
-        effects: { water: 4, food: 4, trust: -18 },
+        effects: { water: 3, food: 3, trust: -22, health: -4 },
         feedback: "Det hjälpte dig, men tilliten föll."
       },
       {
         title: "Be alla vänta på kommunen",
         desc: "Extern hjälp är viktig men kan dröja.",
-        effects: { trust: -7, health: -5, knowledge: 3 },
+        effects: { trust: -10, health: -8, knowledge: 2 },
         feedback: "Att bara vänta gjorde gruppen passiv."
       }
     ]
@@ -491,19 +494,19 @@ const scenarios = [
         title: "Använd batteriradio och dela officiell info muntligt",
         desc: "Du använder alternativ kommunikation.",
         requires: { radio: 1 },
-        effects: { knowledge: 25, trust: 12, energy: 4 },
+        effects: { knowledge: 20, trust: 10, energy: 2 },
         feedback: "Batteriradio gav robust informationskanal."
       },
       {
         title: "Skapa fasta informationstider i entrén",
         desc: "Ni minskar brus och sparar batteri.",
-        effects: { knowledge: 16, trust: 14, energy: 6 },
+        effects: { knowledge: 13, trust: 11, energy: 3 },
         feedback: "Strukturerad kommunikation fungerade mycket bra."
       },
       {
         title: "Fortsätt uppdatera chatten hela tiden",
         desc: "Det känns aktivt men tömmer batterier och sprider brus.",
-        effects: { energy: -10, knowledge: -4, trust: -4 },
+        effects: { energy: -14, knowledge: -8, trust: -8, health: -3 },
         feedback: "För mycket digitalt brus försämrade läget."
       }
     ]
@@ -619,6 +622,96 @@ function renderScenario() {
     .join("");
 
   renderInventory();
+  startTimer();
+}
+
+function startTimer() {
+  stopTimer();
+  timerSeconds = TIMER_DURATION;
+  updateTimerDisplay();
+
+  timerInterval = setInterval(() => {
+    timerSeconds--;
+    updateTimerDisplay();
+
+    if (timerSeconds <= 0) {
+      stopTimer();
+      timeoutChoice();
+    }
+  }, 1000);
+}
+
+function stopTimer() {
+  if (timerInterval) {
+    clearInterval(timerInterval);
+    timerInterval = null;
+  }
+}
+
+function updateTimerDisplay() {
+  const minutes = Math.floor(timerSeconds / 60);
+  const seconds = timerSeconds % 60;
+  const display = `${minutes}:${seconds.toString().padStart(2, "0")}`;
+  
+  const timerDisplay = $("timerDisplay");
+  const timerProgress = document.querySelector(".timer-progress");
+  const timerText = document.querySelector(".timer-text");
+
+  if (timerDisplay) {
+    timerDisplay.textContent = display;
+  }
+
+  if (timerProgress) {
+    const circumference = 2 * Math.PI * 45;
+    const progress = (timerSeconds / TIMER_DURATION) * circumference;
+    timerProgress.style.strokeDashoffset = circumference - progress;
+
+    timerProgress.classList.remove("warning", "danger");
+    if (timerText) timerText.classList.remove("warning", "danger");
+
+    if (timerSeconds <= 10) {
+      timerProgress.classList.add("danger");
+      if (timerText) timerText.classList.add("danger");
+    } else if (timerSeconds <= 30) {
+      timerProgress.classList.add("warning");
+      if (timerText) timerText.classList.add("warning");
+    }
+  }
+}
+
+function timeoutChoice() {
+  stopTimer();
+  
+  const scenario = scenarios[state.round];
+  const timeoutEffects = {
+    trust: -15,
+    knowledge: -10,
+    health: -8
+  };
+
+  applyEffects(timeoutEffects);
+  
+  state.round++;
+  state.log.push({
+    round: state.round,
+    scenario: scenario.title,
+    choice: "⏰ TIDEN TAR SLUT",
+    feedback: "Du reagerade för långsamt. Dina grannar misstrodde din handlingskraft och många resurser gick förlorade."
+  });
+
+  toast("⏰ Tiden tog slut! Du får en negativ effekt.");
+  updateMeters();
+
+  setTimeout(() => {
+    if (checkLowResources()) {
+      return;
+    }
+    if (state.round >= scenarios.length || isGameOver()) {
+      finishGame();
+    } else {
+      renderScenario();
+    }
+  }, 850);
 }
 
 function requirementsMet(requirements) {
@@ -661,6 +754,8 @@ function effectSummary(choice) {
 }
 
 function chooseOption(index) {
+  stopTimer();
+  
   const scenario = scenarios[state.round];
   const choice = scenario.choices[index];
 
@@ -953,6 +1048,8 @@ function getPlayerProfile() {
 }
 
 function finishGame() {
+  stopTimer();
+  
   const score = calculateScore();
   const profile = getPlayerProfile();
 
